@@ -1,0 +1,5 @@
+S -> A B | epsilon
+A -> a | b | A1
+A1 -> x y | ( S )
+B -> C
+C -> ( S ) | epsilon
