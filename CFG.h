@@ -230,6 +230,86 @@ public:
     } //ENDFOR
 }//END FUNCTION
 
+
+
+void eliminateLeftRecursion() {
+    for (size_t i = 0; i < nonTerminals.size(); ++i) {
+        State Ai = nonTerminals[i];
+
+        // Step 2: Eliminate Direct Left Recursion
+        std::vector<ProductionRule> recursiveRules;
+        std::vector<ProductionRule> nonRecursiveRules;
+
+        for (const auto& rule : productionRules) {
+            if (rule.getLHS() == Ai) {
+                if (rule.getRHS()[0] == Ai) {
+                    recursiveRules.push_back(rule);
+                } else {
+                    nonRecursiveRules.push_back(rule);
+                }
+            }
+        }
+
+        if (!recursiveRules.empty()) {
+            State AiDash(Ai.getSymbol() + "'", "Non-Terminal");
+            addNonTerminal(AiDash);
+
+            std::vector<ProductionRule> newRules;
+
+            // Create rules for Ai'
+            for (const auto& rule : recursiveRules) {
+                std::vector<State> newRHS(rule.getRHS().begin() + 1, rule.getRHS().end());
+                newRHS.push_back(AiDash);
+                newRules.push_back(ProductionRule(AiDash, newRHS));
+            }
+            // Adding epsilon rule to Ai'
+            newRules.push_back(ProductionRule(AiDash, {State("epsilon", "Terminal")}));
+
+            // Create modified rules for Ai
+            for (const auto& rule : nonRecursiveRules) {
+                std::vector<State> newRHS = rule.getRHS();
+                newRHS.push_back(AiDash);
+                newRules.push_back(ProductionRule(Ai, newRHS));
+            }
+
+            // Remove the original recursive rules and add new ones
+            productionRules = newRules;
+        }
+
+        // Step 1: Replace Indirect Left Recursion
+        for (size_t j = 0; j < i; ++j) {
+            State Aj = nonTerminals[j];
+            std::vector<ProductionRule> newRules;
+
+            for (const auto& rule : productionRules) {
+                if (rule.getLHS() == Ai && rule.getRHS()[0] == Aj) {
+                    std::vector<ProductionRule> AjRules;
+                    
+                    // Find all rules of Aj
+                    for (const auto& r : productionRules) {
+                        if (r.getLHS() == Aj) AjRules.push_back(r);
+                    }
+
+                    // Replace Aj in Ai's rules
+                    for (const auto& AjRule : AjRules) {
+                        std::vector<State> newRHS = AjRule.getRHS();
+                        newRHS.insert(newRHS.end(), rule.getRHS().begin() + 1, rule.getRHS().end());
+                        newRules.push_back(ProductionRule(Ai, newRHS));
+                    }
+                } else {
+                    newRules.push_back(rule);
+                }
+            }
+
+            // Update production rules with newRules
+            productionRules = newRules;
+        }
+
+        
+    }
+}
+
+
 };
 
 #endif // CFG_H

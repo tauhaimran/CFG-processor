@@ -16,3 +16,16 @@ X -> e Y | e Z
 
 leftfacting - testing
 ....................................
+S -> A | A x 
+P -> A x | A | epsilon
+A ->  a a B | a a  C D
+B -> end
+C -> y B | y D
+D -> z
+
+</>
+
+
+leftRecursion - testing
+....................................
+

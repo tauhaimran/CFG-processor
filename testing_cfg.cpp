@@ -43,11 +43,14 @@ int main() {
         std::cout << "-------------------------" << std::endl;
         
         std::cout << "Step#1 -- left factoring.." << std::endl;
-        cfg2.leftFactoring();
+        //cfg2.leftFactoring();
         //cfg2.showNonTerminals();
         // cfg2.showTerminals();
+        //cfg2.display();
+        
+        std::cout << "Step#2 -- left recursion.." << std::endl;
+        cfg2.eliminateLeftRecursion();
         cfg2.display();
-        //std::cout << "Step#2 -- left recursion.." << std::endl;
 
     } else {
         std::cerr << "Failed to load CFG from file." << std::endl;

@@ -1,6 +1,3 @@
-S -> A | A x 
-P -> A x | A | epsilon
-A ->  a a B | a a  C D
-B -> end
-C -> y B | y D
-D -> z
+
+S  -> S a | S b | A a | b  
+A  -> A c | S d | e 
