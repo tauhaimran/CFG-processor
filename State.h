@@ -53,6 +53,9 @@ public:
     void showType() const { std::cout << SymbolType; }
     //bool isTerminal() { return isTerminal; }
 
+    void setSymbol(std::string val) { symbol = val; }
+    void setType(std::string type) { SymbolType = type; }
+    
     bool operator==(const State& other) const {
         // Compare relevant members of the State class
         // Replace 'member' with the actual member(s) to compare

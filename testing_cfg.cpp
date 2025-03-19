@@ -41,8 +41,12 @@ int main() {
         std::cout << "CFG successfully loaded!" << std::endl;
         cfg2.display();
         std::cout << "-------------------------" << std::endl;
-        cfg2.showNonTerminals();
-        cfg2.showTerminals();
+       // cfg2.showNonTerminals();
+        // cfg2.showTerminals();
+        std::cout << "Step#1 -- left factoring.." << std::endl;
+        cfg2.leftFacortring();
+        cfg2.display();
+        //std::cout << "Step#2 -- left recursion.." << std::endl;
 
     } else {
         std::cerr << "Failed to load CFG from file." << std::endl;
