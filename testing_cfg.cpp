@@ -29,7 +29,7 @@ int main() {
     cfg.addProductionRule(rule3);
 
     // Display the CFG
-    cfg.display();
+    //cfg.display();
 
     std::cout << "---now--reading--file---" << std::endl;
 
@@ -40,6 +40,10 @@ int main() {
     if (CFGReader::readFromFile("input.txt", cfg2)) {
         std::cout << "CFG successfully loaded!" << std::endl;
         cfg2.display();
+        std::cout << "-------------------------" << std::endl;
+        cfg2.showNonTerminals();
+        cfg2.showTerminals();
+
     } else {
         std::cerr << "Failed to load CFG from file." << std::endl;
     }

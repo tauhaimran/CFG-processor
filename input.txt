@@ -1,5 +1,9 @@
 S -> A B | epsilon
+S1 -> a
 A -> a | b | A1
-A1 -> x y | ( S )
+A132 -> x y | ( S )
+A' -> a
+B -> A'
 B -> C
 C -> ( S ) | epsilon
+X -> e Y | e Z

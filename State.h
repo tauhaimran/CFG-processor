@@ -50,6 +50,14 @@ public:
 
     std::string getSymbol() { return symbol; }
     void showSymbol() const { std::cout << symbol; }
+    void showType() const { std::cout << SymbolType; }
+    //bool isTerminal() { return isTerminal; }
+
+    bool operator==(const State& other) const {
+        // Compare relevant members of the State class
+        // Replace 'member' with the actual member(s) to compare
+        return this->symbol == other.symbol;
+    }
 };
 
 #endif // TERMINAL_H

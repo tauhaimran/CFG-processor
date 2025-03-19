@@ -7,6 +7,7 @@
 #include <vector>
 #include <sstream>
 #include <cctype>
+#include <iostream>
 #include "CFG.h"
 #include "ProductionRule.h"
 #include "State.h"
@@ -32,9 +33,23 @@ public:
 
             std::string lhsSymbol = line.substr(0, arrowPos);
             std::string rhsSymbols = line.substr(arrowPos + 2);
+            //std::cout << "lhs: " << lhsSymbol << " rhs: " << rhsSymbols << std::endl;
 
             State lhs(lhsSymbol, "non-terminal");
-            if (lhsSymbol == "S") cfg.addNonTerminal(lhs); // Add start symbol as non-terminal
+
+            if( lhsSymbol == "S") { //if it is the start state
+                State lhs = State(lhsSymbol, "non-terminal");    
+            }
+            else if ( lhsSymbol == "epsilon") { // if it is the epsilon
+                State lhs = State(lhsSymbol, "epsilon");
+            }
+            else {
+                
+            }
+            
+            if( isNonTerminal(lhsSymbol) && cfg.isInTerminals(lhs) == false) {// Add symbol as non-terminal
+                cfg.addNonTerminal(lhs); }
+            
 
             std::stringstream ss(rhsSymbols);
             std::string production;
@@ -44,6 +59,7 @@ public:
                 std::vector<State> rhsStates;
 
                 while (rhsStream >> symbol) {
+                    //std::cout << "symbol: " << symbol << " : " <<  isNonTerminal(symbol) << std::endl;
                     if (isNonTerminal(symbol)) { // If it matches NonTerminal pattern
                         State nonTerminal(symbol, "non-terminal");
                         rhsStates.push_back(nonTerminal);
@@ -63,19 +79,31 @@ public:
     }
 
 private:
-    static bool isNonTerminal(const std::string& symbol) {
-        if (symbol == "S") return true; // Special case for Start Symbol
-        if (symbol.size() == 1 && std::isupper(symbol[0])) return true; // A to Z
+static bool isNonTerminal(const std::string& symbol) {
+    //std::cout << "testing >>> symbol: " << symbol << std::endl;
+    
+    if (symbol == "S" && symbol.size() == 1) return true; // Special case for Start Symbol
+    if (symbol.size() == 1 && std::isupper(symbol[0])) return true; // Single Capital Letter A-Z
 
-        // Check for A1, A2, ... Zn pattern
-        if (std::isupper(symbol[0])) {
-            for (size_t i = 1; i < symbol.size(); ++i) {
-                if (!std::isdigit(symbol[i])) return false;
+    // Check pattern: A-Z followed by 0-9, ', or ` in any combination
+    if (std::isupper(symbol[0])) {
+        //std::cout << "\nitr-ing>>>  " << symbol[0] ;
+        
+        for (int i = 1; i < symbol.size(); ++i) {
+            //std::cout << "\nitr-ing>>>  " << symbol[i] ;
+            if (!(std::isdigit(symbol[i]) || symbol[i] != '\'' || symbol[i] != '`')) {
+                return false; // If it's not a digit, ' or `
             }
-            return true;
         }
-        return false;
+        
+        //std::cout << " <<  \n" ;
+        return true; // Valid Non-Terminal pattern
     }
+    
+    return false;
+}
+
+
 };
 
 #endif // CFG_READER_H
