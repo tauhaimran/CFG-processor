@@ -88,13 +88,30 @@ public:
         return false;
     }
 
+    // Function to remove a rule from the productionRules vector by comparing its LHS and RHS
+    void removeRule(const ProductionRule& targetRule) {
+        //std::cout << "removing rule : "; targetRule.display();
+        if (productionRules.empty()) return;
+        for (size_t i = 0; i < productionRules.size(); ++i) {
+            if (productionRules[i].getLHS().getSymbol() == targetRule.getLHS().getSymbol() &&
+                productionRules[i].getRHS() == targetRule.getRHS()) {
+                productionRules.erase(productionRules.begin() + i);
+                return; // Exit after deleting the rule
+            }
+        }
+    }
+
+
     // Step # 1
     //FUNCTION  for left Factoring
-    void leftFacortring(){
+    void leftFactoring(){
 
     //FOR each NonTerminal in nonTerminals
-    for (const auto& nonTerminal : nonTerminals) {
+    for (int x = 0 ; x < nonTerminals.size() ; x++){
+    //for (const auto& nonTerminal : nonTerminals) {
+        const auto& nonTerminal = nonTerminals[x];
         std::vector<ProductionRule> RULES_FOR_NONTERMINAL;
+        //std::cout << "------> checking for... " << nonTerminal.getSymbol() << std::endl;
 
         //Collect all ProductionRules associated with NonTerminal
         for (const auto& rule : productionRules) {
@@ -102,6 +119,7 @@ public:
                 RULES_FOR_NONTERMINAL.push_back(rule);
             }
         }
+        //std::cout<< " got all rules for state : " << nonTerminal.getSymbol() << std::endl;
 
         // Compare each pair of production rules for common prefixes
         //FOR each rule_j in RULES_FOR_NONTERMINAL
@@ -113,21 +131,31 @@ public:
                 std::vector<State> prefix, remainingJ, remainingK;//PREFIX = []
                 int INDEX = 0;//INDEX = 0
 
+                //std::cout << "--------------> here 1\n";
+
                 // Compare symbols until mismatch
                 //WHILE INDEX < min(size of rule_j, size of rule_k) AND 
                 while(INDEX < std::min(rule_j.getRHS().size(), rule_k.getRHS().size()) &&
-                      
+                
                 rule_j.getRHS()[INDEX] == rule_k.getRHS()[INDEX]) {
-                      
+                      //std::cout << "--------------> here2 " << INDEX << "\n" ;
                         if(rule_j.getRHS()[INDEX] == rule_k.getRHS()[INDEX]) //if prefixes match..
                       { //ADD rule_j[INDEX] to PREFIX
                           prefix.push_back(rule_j.getRHS()[INDEX]);
+                          //std::cout << "--------------> here3 " << INDEX << "\n" ;
                       }
-                      INDEX++; //INCREMENT INDEX
+                      
                     
-                    
-                    prefix.push_back(rule_j.getRHS()[INDEX]);
+                    //std::cout << "--------------> here4 " << INDEX << "\n" ;
+                    //prefix.push_back(rule_j.getRHS()[INDEX]);
+                    //std::cout << "--------------> here5 " << INDEX << "\n" ;
+
+                    INDEX++; //INCREMENT INDEX
                 }
+
+                //std::cout << "got all states after same prefix " << std::endl;
+
+                
 
                 //IF PREFIX is NOT empty
                 if(!prefix.empty()) {
@@ -135,8 +163,34 @@ public:
                     State newNonTerminal = nonTerminal;
                     //NEW_NONTERMINAL = NonTerminal + "'"
                     newNonTerminal.setSymbol(newNonTerminal.getSymbol() + "'");
+                    //update prefix
+                    //prefix.pop_back();
+
+                    //it repeats for a bunc of stuff..
+                    //if(prefix.size()>1){
+                      //  prefix.pop_back();
+                    //}
+
+                    prefix.push_back(newNonTerminal);
+                    //MAKE NEW PRODUCTION RULE
+                    ProductionRule newProductionRule(nonTerminal, prefix);
+                    //ADD NEW PRODUCTION RULE to productionRules
+                    productionRules.push_back(newProductionRule);
+                    //REMOVE rule_j and rule_k from productionRules
+                    //productionRules.erase(productionRules.begin() + j);
+                    //productionRules.erase(productionRules.begin() + k);
                     //ADD NEW_NONTERMINAL to nonTerminals
                     addNonTerminal(newNonTerminal);
+
+                    // remove rules that had common prefixes
+                    //productionRules.erase(productionRules.begin() + j);
+                    //productionRules.erase(productionRules.begin() + k);
+
+                    //REMOVE rule_j and rule_k from RULES_FOR_NONTERMINAL
+                    RULES_FOR_NONTERMINAL.erase(RULES_FOR_NONTERMINAL.begin() + j); //REMOVE rule_j from RULES_FOR_NONTERMINAL
+                    RULES_FOR_NONTERMINAL.erase(RULES_FOR_NONTERMINAL.begin() + k); //REMOVE rule_k from RULES_FOR_NONTERMINAL
+
+
 
                     // Prepare remaining parts of rule_j and rule_k
                      // Prepare remaining parts for both rules
@@ -150,25 +204,26 @@ public:
                     }
                     //IF REMAINING_K is empty, ADD ε (epsilon) to REMAINING_K
                     if(remainingK.empty()) {
+                        //std::cout << "Adding epsilon to remainingK" << std::endl;
                         State epsilon( "epsilon" , "terminal");
                         remainingK.push_back(epsilon);
                     }
 
                     // Add the new production rules to grammar
-                    productionRules.push_back(ProductionRule(nonTerminal, prefix)); //ADD ProductionRule(NonTerminal -> PREFIX + NEW_NONTERMINAL) to productionRules
+                   // productionRules.push_back(ProductionRule(nonTerminal, prefix)); //ADD ProductionRule(NonTerminal -> PREFIX + NEW_NONTERMINAL) to productionRules
                     productionRules.push_back(ProductionRule(newNonTerminal, remainingJ)); //ADD ProductionRule(NEW_NONTERMINAL -> REMAINING_J) to productionRules
                     productionRules.push_back(ProductionRule(newNonTerminal, remainingK)); //ADD ProductionRule(NEW_NONTERMINAL -> REMAINING_K) to productionRules
 
                     // Remove the original conflicting rules from grammar
-                    //REMOVE rule_j and rule_k from productionRules
-                    productionRules.erase(productionRules.begin() + j); //REMOVE rule_j from productionRules
-                    productionRules.erase(productionRules.begin() + k); //REMOVE rule_k from productionRules
-                    //REMOVE rule_j and rule_k from RULES_FOR_NONTERMINAL
-                    RULES_FOR_NONTERMINAL.erase(RULES_FOR_NONTERMINAL.begin() + j); //REMOVE rule_j from RULES_FOR_NONTERMINAL
-                    RULES_FOR_NONTERMINAL.erase(RULES_FOR_NONTERMINAL.begin() + k); //REMOVE rule_k from RULES_FOR_NONTERMINAL
+                    // Remove rule_j and rule_k from the original productionRules vector
+                    removeRule(rule_j);
+                    removeRule(rule_k);
+                    //break; // Break out of the loop after removing the rules
 
                     // Restart comparison for updated list
-                    k = j; //k = j .. still tryna ficure out how this part works...
+                    j = 0;
+                    k = 0;
+                    //k = j; //k = j .. still tryna ficure out how this part works...
                 }//ENDIF
             }//ENDFOR
          } //ENDFOR

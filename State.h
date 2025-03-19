@@ -19,7 +19,7 @@ public:
 
 
 
-    State(std::string val , std::string type) : symbol(val) {
+    State(std::string val , std::string type) : symbol(removeSpaces(val)), SymbolType(type) {
         SymbolType = type;
         if (type == "terminal") {
             isTerminal = true;
@@ -48,12 +48,12 @@ public:
 
     }
 
-    std::string getSymbol() { return symbol; }
+    std::string getSymbol() const { return symbol; }
     void showSymbol() const { std::cout << symbol; }
     void showType() const { std::cout << SymbolType; }
     //bool isTerminal() { return isTerminal; }
 
-    void setSymbol(std::string val) { symbol = val; }
+    void setSymbol(std::string val) { symbol = removeSpaces(val); }
     void setType(std::string type) { SymbolType = type; }
     
     bool operator==(const State& other) const {
@@ -61,6 +61,17 @@ public:
         // Replace 'member' with the actual member(s) to compare
         return this->symbol == other.symbol;
     }
+
+    std::string removeSpaces(const std::string& str) {
+        std::string result;
+        for (char ch : str) {
+            if (ch != ' ') {
+                result += ch;
+            }
+        }
+        return result;
+    }
+    
 };
 
 #endif // TERMINAL_H

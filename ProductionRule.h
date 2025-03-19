@@ -33,6 +33,11 @@ public:
         }
         std::cout << std::endl;
     }
+
+    // Define operator== for ProductionRule
+    bool operator==(const ProductionRule& other) const {
+        return this->getLHS() == other.getLHS() && this->getRHS() == other.getRHS();
+    }
 };
 
 #endif // PRODUCTION_RULE_H
