@@ -42,15 +42,31 @@ int main() {
         cfg2.display();
         std::cout << "-------------------------" << std::endl;
         
-        std::cout << "Step#1 -- left factoring.." << std::endl;
+        //std::cout << "Step#1 -- left factoring.." << std::endl;
         //cfg2.leftFactoring();
         //cfg2.showNonTerminals();
         // cfg2.showTerminals();
         //cfg2.display();
         
-        std::cout << "Step#2 -- left recursion.." << std::endl;
-        cfg2.eliminateLeftRecursion();
-        cfg2.display();
+        //std::cout << "Step#2 -- left recursion.." << std::endl;
+        //cfg2.eliminateLeftRecursion();
+        //cfg2.display();
+
+        std::cout << "Step#3 -- computing first set.." << std::endl;
+        //cfg2.computeFirstSet();
+        cfg2.computeALLFirstSets();
+        //std::cout << "First sets computed!" << std::endl;
+        cfg2.displayFirstSets();
+        //std::cout << "First sets displayed!" << std::endl;
+
+        std::cout << "Step#4 -- computing follow set.." << std::endl;
+        //cfg2.computeFollowSet();
+        cfg2.computeAllFollowSets();
+        cfg2.displayFollowSets();
+
+
+        std::cout << "Step#5 -- LL(1) parsing table.." << std::endl;
+        //cfg2.computeLL1ParsingTable();
 
     } else {
         std::cerr << "Failed to load CFG from file." << std::endl;

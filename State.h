@@ -49,6 +49,7 @@ public:
     }
 
     std::string getSymbol() const { return symbol; }
+    std::string getType() const { return SymbolType; }
     void showSymbol() const { std::cout << symbol; }
     void showType() const { std::cout << SymbolType; }
     //bool isTerminal() { return isTerminal; }

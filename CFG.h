@@ -6,13 +6,18 @@
 #include <iostream>
 #include "State.h"
 #include "ProductionRule.h"
+#include "StateSet.h"
 
 class CFG {
 private:
     std::vector<State> nonTerminals;   // Stores all non-terminal states
     std::vector<State> terminals;      // Stores all terminal states
     std::vector<ProductionRule> productionRules; // Stores all production rules
+    std::vector<StateSet> firstSets;    // Stores all state sets
+    std::vector<StateSet> followSets;   // Stores all follow sets
+    std::vector<State> leftOverStates;   // temp storage for computation...
     State startSymbol;                 // Stores the starting symbol of the grammar
+
 
 public:
     // Constructor to initialize the CFG with a starting symbol
@@ -231,7 +236,8 @@ public:
 }//END FUNCTION
 
 
-
+// Step 2
+// FUNCTION to eliminate left recursion
 void eliminateLeftRecursion() {
     for (size_t i = 0; i < nonTerminals.size(); ++i) {
         State Ai = nonTerminals[i];
@@ -309,6 +315,122 @@ void eliminateLeftRecursion() {
     }
 }
 
+// step # 3 
+// FUNCTION to compute the FIRST set for a given symbol 
+void computeALLFirstSets() {
+
+    for (const auto& nonTerminal : nonTerminals) {
+        //std::cout << "Computing follow set for: " << nonTerminal.getSymbol() << std::endl;
+        firstSets.push_back(StateSet(nonTerminal));
+    }
+
+    for (const auto& nonTerminal : nonTerminals) {
+        computeFirstSet(nonTerminal);
+    }
+
+    while(!leftOverStates.empty()){
+        State temp = leftOverStates.back();
+        leftOverStates.pop_back();
+        computeFirstSet(temp);
+    }
+}
+
+void displayFirstSets() const {
+    for (const auto& stateSet : firstSets) {
+        stateSet.showFirstSet();
+    }
+}
+
+void computeFirstSet(const State& nonTerminal) {
+    for (const auto& rule : productionRules) {
+        if (rule.getLHS() == nonTerminal) {
+            const auto& rhs = rule.getRHS();
+            if (!rhs.empty()) {
+                const State& firstSymbol = rhs[0];
+                if (firstSymbol.getType() == "terminal" || firstSymbol.getType() == "epsilon") {
+                    // Add terminal or epsilon directly to FIRST set
+                    for (auto& stateSet : firstSets) {
+                        if(stateSet.getSet().empty() && stateSet.getSymbol() == nonTerminal){
+                            //std::cout << "Adding " << firstSymbol.getSymbol() << " to first set of " << nonTerminal.getSymbol() << std::endl;
+                            stateSet.addToFirstSet(State("epsilon", "terminal"));
+                            break;
+                        }
+                        else if (stateSet.getSymbol() == nonTerminal) {
+                            //std::cout << "Adding " << firstSymbol.getSymbol() << " to first set of " << nonTerminal.getSymbol() << std::endl;
+                            stateSet.addToFirstSet(firstSymbol);
+                            break;
+                        }
+                    }
+                } else {
+                    // Recursively compute FIRST for non-terminals
+                    //leftOverStates.push_back(nonTerminal);
+                    //leftOverStates.push_back(firstSymbol);
+                    computeFirstSet(firstSymbol); //first getting missing
+                    
+                    //computeFirstSet(nonTerminal); //then recomputing the one that had the missing
+                    //std::cout << "Adding FIRST(" << firstSymbol.getSymbol() << ") to first set of " << nonTerminal.getSymbol() << std::endl;
+                }
+            }
+        }
+    }
+    return;
+}
+
+// Step # 4
+// FUNCTION to compute the FOLLOW set for a given symbol
+void computeAllFollowSets() {
+    
+    for (const auto& nonTerminal : nonTerminals) {
+        //std::cout << "Computing follow set for: " << nonTerminal.getSymbol() << std::endl;
+        followSets.push_back(StateSet(nonTerminal));
+    }
+
+    for (const auto& nonTerminal : nonTerminals) {
+        //std::cout << "Computing follow set for: " << nonTerminal.getSymbol() << std::endl;
+        computeFollowSet(nonTerminal);
+    }
+}
+
+void displayFollowSets() const {
+    for (const auto& stateSet : followSets) {
+        stateSet.showFollowSet();
+    }
+}
+
+void computeFollowSet(const State& nonTerminal) {
+    std::cout << ">>>>Computing follow set for: " << nonTerminal.getSymbol() << std::endl;
+    if (nonTerminal == startSymbol) {
+        //std::cout << "Adding $ to follow set of " << nonTerminal.getSymbol() << std::endl;
+            //followSets.push_back( StateSet(nonTerminal));
+            for(auto& stateSet : followSets){
+                if(stateSet.getSymbol() == startSymbol){
+                    std::cout << "Adding $ to follow set of " << nonTerminal.getSymbol() << std::endl;
+                    stateSet.addToFollowSet(State("$", "terminal"));
+                }
+            }
+    }
+
+    for (const auto& rule : productionRules) {
+        const auto& rhs = rule.getRHS();
+        for (size_t i = 0; i < rhs.size(); ++i) {
+            if (rhs[i] == nonTerminal && i + 1 < rhs.size()) {
+                const State& nextSymbol = rhs[i + 1];
+                if (nextSymbol.getType() == "terminal") {
+                    for (auto& stateSet : followSets) {
+                        if (stateSet.getSet().front() == nonTerminal.getSymbol()) {
+                            std::cout << "Adding " << nextSymbol.getSymbol() << " to follow set of " << nonTerminal.getSymbol() << std::endl;
+                            stateSet.addToFollowSet(nextSymbol);
+                        }
+                    }
+                } else {
+                    computeFirstSet(nextSymbol);
+                    //computeFollowSet(nextSymbol);
+                    //std::cout << "Adding FIRST(" << nextSymbol.getSymbol() << ") to follow set of " << nonTerminal.getSymbol() << std::endl;
+                }
+            }
+        }
+    }
+}
 
 };
 
