@@ -46,6 +46,16 @@ public:
         return false;
     }
 
+    bool existsInSet(const std::vector<std::string>& stateSet, const std::string& state) const {
+        for (const auto& s : stateSet) {
+            if (s == state) {
+
+                return true;
+            }
+        }
+        return false;
+    }
+
     // Displays the FIRST set
     void showFirstSet() const {
         std::cout << "FIRST(" << symbol.getSymbol() <<  ") Set: { ";
@@ -67,9 +77,18 @@ public:
     State getSymbol() const {
         return symbol;
     }
+    std::vector<std::string> getSet() const {
+        return Set;
+    }
 
-    // Returns a reference to the set
-    const std::vector<std::string>& getSet() const { return Set; }
+    void copySet(const std::vector<std::string>& set) {
+        for(const auto& s : set){
+            if(!existsInSet(Set, s)){
+                Set.push_back(s);
+            }
+        }
+    }
+
 
 };
 

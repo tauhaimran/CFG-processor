@@ -353,12 +353,12 @@ void computeFirstSet(const State& nonTerminal) {
                         if(stateSet.getSet().empty() && stateSet.getSymbol() == nonTerminal){
                             //std::cout << "Adding " << firstSymbol.getSymbol() << " to first set of " << nonTerminal.getSymbol() << std::endl;
                             stateSet.addToFirstSet(State("epsilon", "terminal"));
-                            break;
+                            //break;
                         }
                         else if (stateSet.getSymbol() == nonTerminal) {
                             //std::cout << "Adding " << firstSymbol.getSymbol() << " to first set of " << nonTerminal.getSymbol() << std::endl;
                             stateSet.addToFirstSet(firstSymbol);
-                            break;
+                            //break;
                         }
                     }
                 } else {
@@ -366,7 +366,19 @@ void computeFirstSet(const State& nonTerminal) {
                     //leftOverStates.push_back(nonTerminal);
                     //leftOverStates.push_back(firstSymbol);
                     computeFirstSet(firstSymbol); //first getting missing
-                    
+                    for(auto& stateSet : firstSets){
+                        if(stateSet.getSymbol() == nonTerminal){
+                        
+                            for(auto& stateSet2 : firstSets){
+                                if(stateSet2.getSymbol() == firstSymbol){
+                                    for(auto& s : stateSet2.getSet()){
+                                        stateSet.copySet(stateSet2.getSet());
+                                        std::cout << "Adding " << firstSymbol.getSymbol() << "'s set to to first set of " << nonTerminal.getSymbol() << std::endl;
+                                    }
+                                }
+                            }
+                        }
+                    }
                     //computeFirstSet(nonTerminal); //then recomputing the one that had the missing
                     //std::cout << "Adding FIRST(" << firstSymbol.getSymbol() << ") to first set of " << nonTerminal.getSymbol() << std::endl;
                 }
