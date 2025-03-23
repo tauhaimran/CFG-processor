@@ -1,8 +1,18 @@
 #include <iostream>
+#include <fstream>
 #include "CFG.h"
 #include "CFGReader.h"
 
 int main() {
+    // Redirect std::cout to a file
+    std::ofstream outFile("output.txt");
+    if (!outFile) {
+        std::cerr << "Failed to open output file." << std::endl;
+        return 1;
+    }
+    std::streambuf* coutBuf = std::cout.rdbuf(); // Save the original buffer
+    std::cout.rdbuf(outFile.rdbuf()); // Redirect std::cout to outFile
+
     // Define some states
     State S("S", "start-state");
     State A("A", "non-terminal");
@@ -42,15 +52,15 @@ int main() {
         cfg2.display();
         std::cout << "-------------------------" << std::endl;
         
-        //std::cout << "Step#1 -- left factoring.." << std::endl;
-        //cfg2.leftFactoring();
+        std::cout << "Step#1 -- left factoring.." << std::endl;
+        cfg2.leftFactoring();
         //cfg2.showNonTerminals();
         // cfg2.showTerminals();
-        //cfg2.display();
+        cfg2.display();
         
-        //std::cout << "Step#2 -- left recursion.." << std::endl;
-        //cfg2.eliminateLeftRecursion();
-        //cfg2.display();
+        std::cout << "Step#2 -- left recursion.." << std::endl;
+        cfg2.eliminateLeftRecursion();
+        cfg2.display();
 
         std::cout << "Step#3 -- computing first set.." << std::endl;
         //cfg2.computeFirstSet();
@@ -66,12 +76,15 @@ int main() {
 
 
         std::cout << "Step#5 -- LL(1) parsing table.." << std::endl;
-        //cfg2.computeLL1ParsingTable();
+        cfg2.computeLL1ParsingTable();
 
     } else {
         std::cerr << "Failed to load CFG from file." << std::endl;
     }
 
+    // Restore the original buffer
+    std::cout.rdbuf(coutBuf);
+    outFile.close();
 
     return 0;
 }

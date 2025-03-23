@@ -30,3 +30,13 @@ leftRecursion - testing
 ....................................
 S  -> S a | S b | A a | b  
 A  -> A c | S d | e 
+
+</>
+
+
+
+sets and stuff
+....................................
+S -> A B
+A -> a A | epsilon
+B -> b B | epsilon

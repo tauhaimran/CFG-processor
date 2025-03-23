@@ -4,10 +4,12 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <iomanip>
 #include "State.h"
 #include "ProductionRule.h"
 #include "StateSet.h"
-
+#include "ParsingTable.h"
+    
 class CFG {
 private:
     std::vector<State> nonTerminals;   // Stores all non-terminal states
@@ -401,6 +403,19 @@ void computeAllFollowSets() {
         //std::cout << "Computing follow set for: " << nonTerminal.getSymbol() << std::endl;
         computeFollowSet(nonTerminal);
     }
+
+    
+    for ( auto& startSet : followSets) {
+        if(startSet.getSymbol() == startSymbol){
+            for (auto& stateSet : followSets) {
+                if (stateSet.getSet().empty()) {
+                    startSet.copySet(stateSet.getSet());
+                    //std::cout << "Adding $ to follow set of " << startSymbol.getSymbol() << std::endl;
+                }
+            }
+        }
+    }
+    
 }
 
 void displayFollowSets() const {
@@ -410,39 +425,207 @@ void displayFollowSets() const {
 }
 
 void computeFollowSet(const State& nonTerminal) {
-    std::cout << ">>>>Computing follow set for: " << nonTerminal.getSymbol() << std::endl;
-    if (nonTerminal == startSymbol) {
-        //std::cout << "Adding $ to follow set of " << nonTerminal.getSymbol() << std::endl;
-            //followSets.push_back( StateSet(nonTerminal));
-            for(auto& stateSet : followSets){
-                if(stateSet.getSymbol() == startSymbol){
-                    std::cout << "Adding $ to follow set of " << nonTerminal.getSymbol() << std::endl;
-                    stateSet.addToFollowSet(State("$", "terminal"));
-                }
-            }
-    }
-
-    for (const auto& rule : productionRules) {
-        const auto& rhs = rule.getRHS();
-        for (size_t i = 0; i < rhs.size(); ++i) {
-            if (rhs[i] == nonTerminal && i + 1 < rhs.size()) {
-                const State& nextSymbol = rhs[i + 1];
-                if (nextSymbol.getType() == "terminal") {
-                    for (auto& stateSet : followSets) {
-                        if (stateSet.getSet().front() == nonTerminal.getSymbol()) {
-                            std::cout << "Adding " << nextSymbol.getSymbol() << " to follow set of " << nonTerminal.getSymbol() << std::endl;
-                            stateSet.addToFollowSet(nextSymbol);
-                        }
+        //std::cout << ">>>>Computing follow set for: " << nonTerminal.getSymbol() << std::endl;
+        if (nonTerminal == startSymbol) {
+            //std::cout << "Adding $ to follow set of " << nonTerminal.getSymbol() << std::endl;
+                //followSets.push_back( StateSet(nonTerminal));
+                for(auto& stateSet : followSets){
+                    if(stateSet.getSymbol() == startSymbol){
+                        std::cout << "Adding $ to follow set of " << nonTerminal.getSymbol() << std::endl;
+                        stateSet.addToFollowSet(State("$", "terminal"));
                     }
-                } else {
-                    computeFirstSet(nextSymbol);
-                    //computeFollowSet(nextSymbol);
-                    //std::cout << "Adding FIRST(" << nextSymbol.getSymbol() << ") to follow set of " << nonTerminal.getSymbol() << std::endl;
+                }
+        }
+
+        for (const auto& rule : productionRules) {
+            const auto& rhs = rule.getRHS();
+            for (size_t i = 0; i < rhs.size(); ++i) {
+                if (rhs[i] == nonTerminal && i + 1 < rhs.size()) {
+                    const State& nextSymbol = rhs[i + 1];
+                    if (nextSymbol.getType() == "terminal") {
+                        for (auto& stateSet : followSets) {
+                            if (stateSet.getSet().front() == nonTerminal.getSymbol()) {
+                                std::cout << "Adding " << nextSymbol.getSymbol() << " to follow set of " << nonTerminal.getSymbol() << std::endl;
+                                stateSet.addToFollowSet(nextSymbol);
+                            }
+                        }
+                    } else {
+                        computeFirstSet(nextSymbol);
+                        for(const auto& stateSet : firstSets){
+                            if(stateSet.getSymbol() == nextSymbol){
+                                for(auto& follow_stateSet : followSets){
+                                    if(follow_stateSet.getSymbol() == nonTerminal){
+                                        std::vector<std::string> temp = stateSet.getSet();
+                                        std::vector<std::string> temp_new ;
+                                        for(const auto& s : temp){
+                                                temp_new.push_back(s);
+                                        }
+                                        for(const auto& s : temp_new){
+                                            //if(s != "epsilon"){
+                                                follow_stateSet.addToFollowSet(State(s, "terminal"));
+                                            //}
+                                        
+                                    }
+                                }
+                            }
+                        }
+                        //computeFollowSet(nonTerminal);
+                        //std::cout << "Adding FIRST(" << nextSymbol.getSymbol() << ") to follow set of " << nonTerminal.getSymbol() << std::endl;
+                    }
                 }
             }
         }
     }
 }
+
+// FUNCTION to compute the LL(1) Parsing Table
+void computeLL1ParsingTable() const {
+    // Create a 2D table where rows are Non-Terminals and columns are Terminals
+    std::vector<std::vector<std::string>> parsingTable(nonTerminals.size(), std::vector<std::string>(terminals.size() + 1, " "));
+
+    // Loop through all production rules
+    for (const auto& rule : productionRules) {
+        const State& LHS = rule.getLHS();
+        const std::vector<State>& RHS = rule.getRHS();
+        
+        // Get the FIRST set of the RHS of the production
+        std::vector<State> firstSetRHS = computeFirstOfRHS(RHS);
+        
+        // For each terminal in the FIRST set of RHS
+        for (const auto& terminal : firstSetRHS) {
+            if (terminal.getSymbol() != "epsilon") {
+                int rowIndex = getNonTerminalIndex(LHS);
+                int colIndex = getTerminalIndex(terminal);
+
+                if (colIndex != -1) {
+                    parsingTable[rowIndex][colIndex] = rule.getProductionAsString();
+                }
+            }
+        }
+
+        // If epsilon is in the FIRST set, add the rule to FOLLOW sets entries
+        for(auto& firstSetRHSstates : firstSetRHS){
+            if (isEpsilon(firstSetRHSstates)) {
+                for (const auto& followTerminal : getFollowSet(LHS)) {
+                    int rowIndex = getNonTerminalIndex(LHS);
+                    int colIndex = getTerminalIndex(followTerminal);
+
+                    if (colIndex != -1) {
+                        parsingTable[rowIndex][colIndex] = rule.getProductionAsString();
+                    }
+                    
+                    // Add end marker '$' for starting symbol
+                    if (followTerminal.getSymbol() == "$") {
+                        parsingTable[rowIndex][terminals.size()] = rule.getProductionAsString();
+                    }
+                }
+            }
+        }
+    }
+
+    displayLL1ParsingTable(parsingTable);
+}
+
+// Helper function to compute FIRST set of a RHS vector
+std::vector<State> computeFirstOfRHS(const std::vector<State>& rhs) const {
+    std::vector<State> result;
+
+    if (rhs.empty()) return {State("epsilon", "terminal")};
+
+    for (const auto& symbol : rhs) {
+        if (symbol.getType() == "terminal") {
+            result.push_back(symbol);
+            break;
+        } 
+        else if (symbol.getType() == "Non-Terminal") {
+            for (const auto& stateSet : firstSets) {
+                if (stateSet.getSymbol() == symbol) {
+                    result.insert(result.end(), stateSet.getSet().begin(), stateSet.getSet().end());
+
+                    bool hasEpsilon = false;
+                    for (const auto& state : stateSet.getSet()) {
+                        if (state == "epsilon") {
+                            hasEpsilon = true;
+                            break;
+                        }
+                    }
+                    
+                    if (!hasEpsilon) {
+                        return result;
+                    }
+                }
+            }
+        }
+    }
+
+    return result;
+}
+
+// Helper function to get index of a Non-Terminal in nonTerminals vector
+int getNonTerminalIndex(const State& nonTerminal) const {
+    for (size_t i = 0; i < nonTerminals.size(); ++i) {
+        if (nonTerminals[i] == nonTerminal) return i;
+    }
+    return -1;
+}
+
+// Helper function to get index of a Terminal in terminals vector
+int getTerminalIndex(const State& terminal) const {
+    for (size_t i = 0; i < terminals.size(); ++i) {
+        if (terminals[i] == terminal) return i;
+    }
+    return -1;
+}
+
+// Helper function to get FOLLOW set for a given Non-Terminal
+std::vector<State> getFollowSet(const State& nonTerminal) const {
+    for (const auto& stateSet : followSets) {
+        if (stateSet.getSymbol() == nonTerminal) {
+            std::vector<State> result;
+            for (const auto& symbol : stateSet.getSet()) {
+                result.push_back(State(symbol, "terminal")); // Adjust type as needed
+            }
+            return result;
+        }
+    }
+    return {};
+}
+
+// FUNCTION to display the LL(1) Parsing Table
+void displayLL1ParsingTable(const std::vector<std::vector<std::string>>& parsingTable) const {
+    std::cout << "\nLL(1) Parsing Table:\n\n";
+
+    // Determine column width for better alignment
+    const int columnWidth = 15;
+
+    // Print header row
+    std::cout << std::setw(columnWidth) << " ";
+    for (const auto& terminal : terminals) {
+        std::cout << std::setw(columnWidth) << terminal.getSymbol();
+    }
+    std::cout << std::setw(columnWidth) << "$" << "\n";
+
+    // Print a separator line
+    std::cout << std::string(columnWidth * (terminals.size() + 3), '-') << "\n";
+
+    // Print rows for each non-terminal
+    for (size_t i = 0; i < parsingTable.size(); ++i) {
+        std::cout << std::setw(columnWidth) << nonTerminals[i].getSymbol() << "|";
+        for (const auto& cell : parsingTable[i]) {
+            std::cout << std::setw(columnWidth) << cell << "|";
+        }
+        std::cout << "\n";
+    }
+}
+    // Helper function to check if a State is epsilon
+    bool isEpsilon(const State& state) const {
+        return state.getSymbol() == "epsilon";
+    }
+
+    // Helper function to check if a State is not epsilon
+    bool isNotEpsilon(const State& state) const {
+        return state.getSymbol() != "epsilon";
+    }
 
 };
 

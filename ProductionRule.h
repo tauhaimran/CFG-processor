@@ -38,6 +38,16 @@ public:
     bool operator==(const ProductionRule& other) const {
         return this->getLHS() == other.getLHS() && this->getRHS() == other.getRHS();
     }
+
+     // Method to return the production rule as a string
+     std::string getProductionAsString() const {
+        std::string result = getLHS().getSymbol() + " -> ";
+        for (const auto& state : getRHS()) {
+            result += state.getSymbol() + " ";
+        }
+        return result;
+    }
+    
 };
 
 #endif // PRODUCTION_RULE_H
