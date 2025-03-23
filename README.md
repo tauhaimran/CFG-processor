@@ -60,7 +60,7 @@ FOLLOW(S') = { epsilon, b }
 ```
 
 ## Authors
-- Tauha Imran (https://github.com/tauhaimran)
-- Husain Ali Zaidi
+- Tauha Imran : [github](https://github.com/tauhaimran)
+- Husain Ali Zaidi : [github](https://github.com/hussainalizaidi-source)
 
 
